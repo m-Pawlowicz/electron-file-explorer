@@ -16,6 +16,7 @@ import path from 'path';
 import { buildMainIpc } from '../ipcBuilder';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { readDirContents } from './readDirContents';
 
 class AppUpdater {
   constructor() {
@@ -27,11 +28,14 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const filesystemIpc = buildMainIpc<{ path: string }>(IPC_CHANNELS.FILESYSTEM);
+const filesystemIpc = buildMainIpc<string[], { path: string }>(
+  IPC_CHANNELS.FILESYSTEM,
+);
 
-filesystemIpc.on((_, reply, args) => {
-  console.log('log on server', args);
-  reply({ path: 'foo reply from server' });
+filesystemIpc.on(async (_, reply, { path }) => {
+  console.log('on backend', path);
+  const files = await readDirContents(path);
+  reply(files);
 });
 
 if (process.env.NODE_ENV === 'production') {

@@ -5,8 +5,7 @@ import { contextBridge } from 'electron';
 import { buildRendererIpc } from '../ipcBuilder';
 
 const electronHandler = {
-  filesystemIpc: buildRendererIpc<{ path: string }>(IPC_CHANNELS.FILESYSTEM),
-  generalIpc: buildRendererIpc<{ data: unknown[] }>(IPC_CHANNELS.GENERAL),
+  filesystemIpc: buildRendererIpc<{ path: string }, string[]>(IPC_CHANNELS.FILESYSTEM),
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);
