@@ -3,9 +3,10 @@
 import { IPC_CHANNELS } from '../constants';
 import { contextBridge } from 'electron';
 import { buildRendererIpc } from '../ipcBuilder';
+import { DirectoryItem } from '../types';
 
 const electronHandler = {
-  filesystemIpc: buildRendererIpc<{ path: string }, string[]>(IPC_CHANNELS.FILESYSTEM),
+  filesystemIpc: buildRendererIpc<{ path: string }, DirectoryItem[]>(IPC_CHANNELS.FILESYSTEM),
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);

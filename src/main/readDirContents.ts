@@ -3,7 +3,20 @@ import nodePath from 'path';
 
 export async function readDirContents(path: string = nodePath.resolve('/')) {
   try {
-    return fs.promises.readdir(path);
+    const files = await fs.promises.readdir(path);
+    const fileStats = await Promise.all(
+      files.map(async (file) => {
+        const filePath = nodePath.join(path, file);
+        const stats = await fs.promises.stat(filePath);
+        return {
+          name: file,
+          isDirectory: stats.isDirectory(),
+          isFile: stats.isFile(),
+        };
+      })
+    );
+    return fileStats;
+    
   } catch (error) {
     console.error(`Error reading directory contents: ${error}`);
     return [];

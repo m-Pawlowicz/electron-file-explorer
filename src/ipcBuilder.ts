@@ -33,7 +33,7 @@ export function buildRendererIpc<TSend, TReceive>(channelName: IPC_CHANNELS) {
  *
  * @param channelName the name of the channel for which we want to get typed data
  */
-export function buildMainIpc<TSend, TReceive>(channelName: IPC_CHANNELS) {
+export function buildMainIpc<TReceive, TSend>(channelName: IPC_CHANNELS) {
   return {
     on: (
       listener: (
