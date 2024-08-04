@@ -8,16 +8,16 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import { IPC_CHANNELS } from '../constants';
 import { app, BrowserWindow, shell } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
+import { IPC_CHANNELS } from '../constants';
 import { buildMainIpc } from '../ipcBuilder';
+import { DirectoryResponse } from '../types';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
 import { readDirContents } from './readDirContents';
-import { DirectoryItem } from '../types';
+import { resolveHtmlPath } from './util';
 
 class AppUpdater {
   constructor() {
@@ -29,14 +29,14 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const filesystemIpc = buildMainIpc<{ path: string }, DirectoryItem[]>(
+const filesystemIpc = buildMainIpc<{ path: string }, DirectoryResponse>(
   IPC_CHANNELS.FILESYSTEM,
 );
 
 filesystemIpc.on(async (_, reply, { path }) => {
   console.log('on backend', path);
   const directoryContents = await readDirContents(path);
-  reply(directoryContents);
+  reply({ path, contents: directoryContents });
 });
 
 if (process.env.NODE_ENV === 'production') {
