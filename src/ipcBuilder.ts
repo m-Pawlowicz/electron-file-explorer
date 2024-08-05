@@ -1,5 +1,11 @@
 import { IPC_CHANNELS } from './constants';
-import { ipcMain, IpcMainEvent, ipcRenderer, IpcRendererEvent } from 'electron';
+import {
+  ipcMain,
+  IpcMainEvent,
+  IpcMainInvokeEvent,
+  ipcRenderer,
+  IpcRendererEvent,
+} from 'electron';
 
 /**
  *
@@ -26,6 +32,9 @@ export function buildRendererIpc<TSend, TReceive>(channelName: IPC_CHANNELS) {
         handler(args);
       });
     },
+    invoke: (args: TSend): Promise<TReceive> => {
+      return ipcRenderer.invoke(channelName, args);
+    },
   };
 }
 
@@ -51,6 +60,11 @@ export function buildMainIpc<TReceive, TSend>(channelName: IPC_CHANNELS) {
 
         listener(_e, replyCb, args);
       });
+    },
+    handle: (
+      listener: (event: IpcMainInvokeEvent, args: TReceive) => Promise<TSend>,
+    ) => {
+      ipcMain.handle(channelName, listener);
     },
   };
 }

@@ -1,12 +1,19 @@
-import { IconButton } from '@mui/material';
-import { DirectoryItem } from '../../types';
 import InsertDriveFile from '@mui/icons-material/InsertDriveFile';
+import { Button, ListItem, SvgIcon } from '@mui/material';
+import { DirectoryItem } from '../../types';
 
 export function File({ name }: Pick<DirectoryItem, 'name'>) {
   return (
-    <IconButton aria-label={`open ${name} file`}>
-      <InsertDriveFile />
-      {name}
-    </IconButton>
+    <ListItem>
+      <Button
+        aria-label={`open ${name} file`}
+        component="button"
+        variant="text"
+        sx={{ color: 'white' }}
+      >
+        <InsertDriveFile />
+        {name}
+      </Button>
+    </ListItem>
   );
 }

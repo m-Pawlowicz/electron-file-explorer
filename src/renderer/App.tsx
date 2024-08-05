@@ -2,50 +2,73 @@ import Folder from '@mui/icons-material/Folder';
 import Collapse from '@mui/material/Collapse';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
-import { useEffect, useState } from 'react';
+import {
+  ElementRef,
+  MouseEventHandler,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
-import { DirectoryItem } from '../types';
 import './App.css';
+import { ChevronRight, ExpandLess } from '@mui/icons-material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import { File } from './components/File';
+import { DirectoryItem } from '../types';
+import ListItem from '@mui/material/ListItem';
 
 const { filesystemIpc } = window.electron;
 
 type FileTreeProps = {
   path?: string;
-  isInitiallyOpen?: boolean;
+  isRoot?: boolean;
 };
 
-function FileTree({ path = '/', isInitiallyOpen = false }: FileTreeProps) {
-  const [open, setOpen] = useState(isInitiallyOpen);
+async function getPathContents(path: string) {
+  return filesystemIpc.invoke({ path });
+}
+
+function FileTree({ path = '/', isRoot = false }: FileTreeProps) {
+  const [open, setOpen] = useState(false);
   const [directoryContents, setDirectoryContents] = useState<DirectoryItem[]>(
     [],
   );
+  const [listPopoverButton, setListPopoverButton] =
+    useState<HTMLButtonElement | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = filesystemIpc.on((args) => {
-      if (args.path === path) {
-        // we want to set new contents only for the component where path matches
-        // otherwise we would set the same contents for every single component that has created a subscription via useEffect
-        // the subscription created in this useEffect will persist until a component will be unmounted
-        // so we spawn a single subscription for each folder, maybe it could be optimized??
-        setDirectoryContents(args.contents);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
+  const listPopoverCallbackRef = useCallback((buttonRef: HTMLButtonElement) => {
+    setListPopoverButton(buttonRef);
   }, []);
 
-  const onFolderClick = () => {
-    if (!open) {
-      filesystemIpc.sendMessage({ path });
+  useEffect(() => {
+    if (!isRoot || open) {
+      return;
     }
-    setOpen((prev) => !prev);
+
+    // dispatch a click event for components with isInitiallyOpen set to true
+    listPopoverButton?.click();
+    setOpen(true);
+  }, [isRoot, listPopoverButton, open]);
+
+  const onFolderClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+    // prevent flipping to false when invoking click from useEffect
+    if (event?.isTrusted) {
+      setOpen((prev) => !prev);
+    }
+
+    setPathContents();
+
+    async function setPathContents() {
+      const pathData = await getPathContents(path);
+      if (pathData.path === path) {
+        setDirectoryContents(pathData.contents);
+      }
+    }
   };
 
   return (
-    <List
+    <Box
       sx={{
         width: '100%',
         position: 'relative',
@@ -53,24 +76,30 @@ function FileTree({ path = '/', isInitiallyOpen = false }: FileTreeProps) {
         height: '100%',
       }}
     >
-      <ListItemButton onClick={onFolderClick}>
+      <Button
+        onClick={onFolderClick}
+        ref={listPopoverCallbackRef}
+        component="button"
+        variant="text"
+      >
+        {open ? <ExpandLess /> : <ChevronRight />}
         <Folder />
         {path}
-      </ListItemButton>
+      </Button>
       {open && (
         <List>
           {directoryContents.map((x, index) => (
-            <li key={x.name + index}>
+            <ListItem key={x.id}>
               {x.isDirectory ? (
-                <FileTree path={x.path} key={x.name + index} />
+                <FileTree path={x.path} />
               ) : (
                 <File name={x.name} />
               )}
-            </li>
+            </ListItem>
           ))}
         </List>
       )}
-    </List>
+    </Box>
   );
 }
 
@@ -78,7 +107,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<FileTree isInitiallyOpen />} />
+        <Route path="/" element={<FileTree isRoot />} />
       </Routes>
     </Router>
   );
