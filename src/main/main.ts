@@ -8,16 +8,14 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import { IPC_CHANNELS } from '../constants';
 import { app, BrowserWindow, shell } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
-import { buildMainIpc } from '../ipcBuilder';
+import { mainIPCs } from '../ipcs';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
 import { readDirContents } from './readDirContents';
-import { DirectoryItem } from '../types';
+import { resolveHtmlPath } from './util';
 
 class AppUpdater {
   constructor() {
@@ -29,14 +27,17 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const filesystemIpc = buildMainIpc<{ path: string }, DirectoryItem[]>(
-  IPC_CHANNELS.FILESYSTEM,
-);
+const { filesystem } = mainIPCs;
 
-filesystemIpc.on(async (_, reply, { path }) => {
-  console.log('on backend', path);
+// filesystem.on(async (_, reply, { path }) => {
+//   console.log('on backend', path);
+//   const directoryContents = await readDirContents(path);
+//   reply({ path, contents: directoryContents });
+// });
+
+filesystem.handle(async (_, { path }) => {
   const directoryContents = await readDirContents(path);
-  reply(directoryContents);
+  return { path, contents: directoryContents };
 });
 
 if (process.env.NODE_ENV === 'production') {

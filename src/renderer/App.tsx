@@ -1,39 +1,113 @@
+import Folder from '@mui/icons-material/Folder';
+import Collapse from '@mui/material/Collapse';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
 import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from 'react-router-dom';
+  ElementRef,
+  MouseEventHandler,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
+import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-import { useEffect } from 'react';
+import { ChevronRight, ExpandLess } from '@mui/icons-material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import { File } from './components/File';
+import { DirectoryItem } from '../types';
+import ListItem from '@mui/material/ListItem';
 
 const { filesystemIpc } = window.electron;
 
-function Hello() {
-  const location = useLocation();
+type FileTreeProps = {
+  path?: string;
+  isRoot?: boolean;
+};
 
-  useEffect(() => {
-    filesystemIpc.sendMessage({ path: location.pathname });
+async function getPathContents(path: string) {
+  return filesystemIpc.invoke({ path });
+}
+
+function FileTree({ path = '/', isRoot = false }: FileTreeProps) {
+  const [open, setOpen] = useState(false);
+  const [directoryContents, setDirectoryContents] = useState<DirectoryItem[]>(
+    [],
+  );
+  const [listPopoverButton, setListPopoverButton] =
+    useState<HTMLButtonElement | null>(null);
+
+  const listPopoverCallbackRef = useCallback((buttonRef: HTMLButtonElement) => {
+    setListPopoverButton(buttonRef);
   }, []);
 
   useEffect(() => {
-    const unsubscribe = filesystemIpc.on((args) => {
-      console.log('directory items from backend', args);
-    });
+    if (!isRoot || open) {
+      return;
+    }
 
-    return () => {
-      unsubscribe();
-    };
-  });
+    // dispatch a click event for components with isInitiallyOpen set to true
+    listPopoverButton?.click();
+    setOpen(true);
+  }, [isRoot, listPopoverButton, open]);
 
-  return <>placeholder</>;
+  const onFolderClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+    // prevent flipping to false when invoking click from useEffect
+    if (event?.isTrusted) {
+      setOpen((prev) => !prev);
+    }
+
+    setPathContents();
+
+    async function setPathContents() {
+      const pathData = await getPathContents(path);
+      if (pathData.path === path) {
+        setDirectoryContents(pathData.contents);
+      }
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        position: 'relative',
+        overflow: 'auto',
+        height: '100%',
+      }}
+    >
+      <Button
+        onClick={onFolderClick}
+        ref={listPopoverCallbackRef}
+        component="button"
+        variant="text"
+      >
+        {open ? <ExpandLess /> : <ChevronRight />}
+        <Folder />
+        {path}
+      </Button>
+      {open && (
+        <List>
+          {directoryContents.map((x, index) => (
+            <ListItem key={x.id}>
+              {x.isDirectory ? (
+                <FileTree path={x.path} />
+              ) : (
+                <File name={x.name} />
+              )}
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Box>
+  );
 }
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Hello />} />
+        <Route path="/" element={<FileTree isRoot />} />
       </Routes>
     </Router>
   );
