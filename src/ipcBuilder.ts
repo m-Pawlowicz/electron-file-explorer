@@ -1,4 +1,3 @@
-import { IPC_CHANNELS } from './constants';
 import {
   ipcMain,
   IpcMainEvent,
@@ -6,6 +5,7 @@ import {
   ipcRenderer,
   IpcRendererEvent,
 } from 'electron';
+import { IPC_CHANNELS } from './constants';
 
 /**
  *

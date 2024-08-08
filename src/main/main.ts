@@ -12,7 +12,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
-import { mainIPCs } from '../ipcs';
+import { getIpcs } from '../ipcs';
 import MenuBuilder from './menu';
 import { readDirContents } from './readDirContents';
 import { resolveHtmlPath } from './util';
@@ -27,13 +27,7 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const { filesystem } = mainIPCs;
-
-// filesystem.on(async (_, reply, { path }) => {
-//   console.log('on backend', path);
-//   const directoryContents = await readDirContents(path);
-//   reply({ path, contents: directoryContents });
-// });
+const { filesystem } = getIpcs('main');
 
 filesystem.handle(async (_, { path }) => {
   const directoryContents = await readDirContents(path);

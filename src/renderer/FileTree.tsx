@@ -1,22 +1,14 @@
+import "./FileTree.css"
 import Folder from '@mui/icons-material/Folder';
-import Collapse from '@mui/material/Collapse';
 import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import {
-  ElementRef,
-  MouseEventHandler,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
-import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
-import './App.css';
-import { ChevronRight, ExpandLess } from '@mui/icons-material';
+import { MouseEventHandler, useCallback, useEffect, useState } from 'react';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import ExpandLess from '@mui/icons-material/ExpandLess';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import { File } from './components/File';
-import { DirectoryItem } from '../types';
 import ListItem from '@mui/material/ListItem';
+import { DirectoryItem } from '../types';
+import { File } from './File';
 
 const { filesystemIpc } = window.electron;
 
@@ -29,7 +21,7 @@ async function getPathContents(path: string) {
   return filesystemIpc.invoke({ path });
 }
 
-function FileTree({ path = '/', isRoot = false }: FileTreeProps) {
+export function FileTree({ path = '/', isRoot = false }: FileTreeProps) {
   const [open, setOpen] = useState(false);
   const [directoryContents, setDirectoryContents] = useState<DirectoryItem[]>(
     [],
@@ -100,15 +92,5 @@ function FileTree({ path = '/', isRoot = false }: FileTreeProps) {
         </List>
       )}
     </Box>
-  );
-}
-
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<FileTree isRoot />} />
-      </Routes>
-    </Router>
   );
 }

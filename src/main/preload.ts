@@ -1,9 +1,9 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge } from 'electron';
-import { rendererIPCs } from '../ipcs';
+import { getIpcs } from '../ipcs';
 
-const { filesystem } = rendererIPCs;
+const { filesystem } = getIpcs('renderer');
 
 const electronHandler = {
   filesystemIpc: filesystem,
