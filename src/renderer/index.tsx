@@ -4,8 +4,8 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import './index.css';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import { FileTree } from './FileTree';
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
-root.render(<App />);
+root.render(<FileTree isRoot/>);

@@ -1,6 +1,7 @@
 import InsertDriveFile from '@mui/icons-material/InsertDriveFile';
-import { Button, ListItem, SvgIcon } from '@mui/material';
-import { DirectoryItem } from '../../types';
+import Button from '@mui/material/Button';
+import ListItem from '@mui/material/ListItem';
+import { DirectoryItem } from '../types';
 
 export function File({ name }: Pick<DirectoryItem, 'name'>) {
   return (
